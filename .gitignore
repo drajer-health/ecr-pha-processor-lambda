@@ -1,8 +1,12 @@
 # Compiled class file
 *.class
-
+.classpath
+.settings
+.project
+/target
 # Log file
 *.log
+dependency-reduced-pom.xml
 
 # BlueJ files
 *.ctxt

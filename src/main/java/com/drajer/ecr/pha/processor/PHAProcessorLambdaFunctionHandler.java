@@ -53,6 +53,12 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<S3Event
 					"RR_FHIR.xml");
 			builder.addBinaryBody("files", getEICRFHIR(bucket, keyPrefix, context), ContentType.MULTIPART_FORM_DATA,
 					"EICR_FHIR.xml");
+
+			builder.addBinaryBody("files", getRRFHIRCDA(bucket, keyPrefix, context), ContentType.MULTIPART_FORM_DATA,
+					"RR_CDA.xml");
+			builder.addBinaryBody("files", getEICRFHIRCDA(bucket, keyPrefix, context), ContentType.MULTIPART_FORM_DATA,
+					"EICR_CDA.xml");
+
 			
 			builder.addTextBody("folderName", keyPrefix);
 
@@ -104,6 +110,38 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<S3Event
 
 	private byte[] getRRFHIR(String bucket, String keyPrefix, Context context) {
 		String file = keyPrefix + "RR_FHIR.xml";
+		S3Object response = null;
+		try {
+			response = s3.getObject(new GetObjectRequest(bucket, file));
+			String contentType = response.getObjectMetadata().getContentType();
+			context.getLogger().log("CONTENT TYPE: " + contentType);
+			return IOUtils.toByteArray(response.getObjectContent());
+		} catch (Exception e) {
+			e.printStackTrace();
+			context.getLogger().log(String.format("Error getting object %s from bucket %s. Make sure they exist and"
+					+ " your bucket is in the same region as this function.", file, bucket));
+			return null;
+		}
+	}
+
+	private byte[] getEICRFHIRCDA(String bucket, String keyPrefix, Context context) {
+		String file = keyPrefix + "EICR_CDA.xml";
+		S3Object response = null;
+		try {
+			response = s3.getObject(new GetObjectRequest(bucket, file));
+			String contentType = response.getObjectMetadata().getContentType();
+			context.getLogger().log("CONTENT TYPE: " + contentType);
+			return IOUtils.toByteArray(response.getObjectContent());
+		} catch (Exception e) {
+			e.printStackTrace();
+			context.getLogger().log(String.format("Error getting object %s from bucket %s. Make sure they exist and"
+					+ " your bucket is in the same region as this function.", file, bucket));
+			return null;
+		}
+	}
+
+	private byte[] getRRFHIRCDA(String bucket, String keyPrefix, Context context) {
+		String file = keyPrefix + "RR_CDA.xml";
 		S3Object response = null;
 		try {
 			response = s3.getObject(new GetObjectRequest(bucket, file));

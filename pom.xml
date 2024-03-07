@@ -50,12 +50,7 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<dependencies>
-		<dependency>
-		    <groupId>org.springframework.boot</groupId>
-		    <artifactId>spring-boot-starter-webflux</artifactId>
-		    <version>3.2.3</version>
-		</dependency>		
+	<dependencies>		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

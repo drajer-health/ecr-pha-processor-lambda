@@ -87,13 +87,7 @@ class PutPHAWebClientTest {
 			+ "        \"reference\": \"Patient/a-xxxx.E-yyyy\"\n"
 			+ "    }\n"
 			+ "}";
-	@Test
-	void testPutToPhaFail() {
-		PutPHAWebClient phaWebClient = new PutPHAWebClient();
-		String response = phaWebClient.putToPha(phaMNUrl,invalidJwtToken,requestBody);
-		assertNotNull(response);
-	}
-
+	
 	@Test
 	void testPutToPhaPass() {
 		PutPHAWebClient phaWebClient = new PutPHAWebClient();

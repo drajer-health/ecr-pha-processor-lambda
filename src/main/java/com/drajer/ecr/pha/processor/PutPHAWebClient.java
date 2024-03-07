@@ -15,8 +15,8 @@ public class PutPHAWebClient {
 	public String putToPha(String url, String jwtToken, String requestBody) {
 		String responseObj = null;
 		try {
-			responseObj = getWebClient(url).put().contentType(MediaType.APPLICATION_JSON)
-					.accept(MediaType.APPLICATION_JSON).header("X-Request-ID", UUID.randomUUID().toString())
+			responseObj = getWebClient(url).put().contentType(MediaType.APPLICATION_XML)
+					.accept(MediaType.APPLICATION_XML).header("X-Request-ID", UUID.randomUUID().toString())
 					.header("Authorization", jwtToken).bodyValue(requestBody).retrieve()
 					.onStatus(HttpStatusCode::is4xxClientError,
 							response -> response.bodyToMono(String.class).flatMap(

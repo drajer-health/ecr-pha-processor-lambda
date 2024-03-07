@@ -1,4 +1,4 @@
-package com.drajer.transfer;
+package com.drajer.ecr.pha.processor;
 
 import static org.junit.jupiter.api.Assertions.*;
 

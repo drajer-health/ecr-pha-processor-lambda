@@ -95,8 +95,8 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<S3Event
 	}
 	
 	private void pushToPHA(String bucket, String keyPrefix, Context context) {
-		String phaMNUrl = "https://dex.nonprod.health.state.mn.us/api/resources/direct/idepc/ecr/himss/demo";
-		String jwtToken = "API eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI1MzhmN2UyZC1jNWI4LTQyNzAtYjJkOC05YzA4NjMxNWY1MjIifQ.eyJpYXQiOjE3MDg0NTk4MzgsImp0aSI6ImMwMzM5MGQxLTE2ZWQtNGNhOC1iZDQxLTA3MDE3M2NiZGJlYyIsImlzcyI6Imh0dHBzOi8vZGV4LXNlcnZpY2Uubm9ucHJvZC5oZWFsdGguc3RhdGUubW4udXMvYXV0aC9yZWFsbXMvZ2F0ZXdheSIsImF1ZCI6Imh0dHBzOi8vZGV4LXNlcnZpY2Uubm9ucHJvZC5oZWFsdGguc3RhdGUubW4udXMvYXV0aC9yZWFsbXMvZ2F0ZXdheSIsInN1YiI6ImNjMmIxM2FjLTVjODgtNGU5Mi1hZjcyLTRhNDA1MzE0NmEyZCIsInR5cCI6Ik9mZmxpbmUiLCJhenAiOiJkZXgiLCJzZXNzaW9uX3N0YXRlIjoiODE3NTk5NWUtNzhhZS00ZDFhLWI1ZTQtMmQ1ZTJhMjVkZGVmIiwic2NvcGUiOiJlbWFpbCBwcm9maWxlIG9mZmxpbmVfYWNjZXNzIiwic2lkIjoiODE3NTk5NWUtNzhhZS00ZDFhLWI1ZTQtMmQ1ZTJhMjVkZGVmIn0.W1gGBD9pBbenAJeGfsh2sSzNbrHPSxcKNLvZ5n9MxBU";
+		String phaMNUrl = "https://xxxxxx/api/resources/direct/idepc/ecr/himss/demo";
+		String jwtToken = "API xxxxxx.xxxxx.xxxxxx";
 		
 		String file = keyPrefix + "EICR_FHIR.xml";
 		S3Object response = null;

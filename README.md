@@ -4,7 +4,7 @@ S3 Trigger to push files to PHA / Health Care Centers.
 
 ### Prerequisites:
 
-1.  Java 8 or Higher
+1.  Java 17 or Higher
 2.  AWS SDK - STS or Eclipse
 3.  AWS Account
 4.  Maven 3.3.x
@@ -46,7 +46,7 @@ Login to your AWS Account
 
 ```
 Function Name: ecr-PHA-Processor-lambda
-Runtime: Java 8 on Amazon Linux 1 or any other Java runtimes
+Runtime: Java 17
 Permissions: Create a new role with basic Lambda permissions or select your organization specific security
 ```
 5. Click on "Create Function"

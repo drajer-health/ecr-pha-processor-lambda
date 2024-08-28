@@ -4,24 +4,25 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.drajer.ecr.pha</groupId>
 	<artifactId>ecr-pha-processor-lambda</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 	<properties>
 		<maven.test.skip>true</maven.test.skip>
+	    <maven.compiler.target>17</maven.compiler.target>
+	    <maven.compiler.source>17</maven.compiler.source>
+	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
 	</properties>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<encoding>UTF-8</encoding>
-					<forceJavacCompilerUse>true</forceJavacCompilerUse>
-				</configuration>
-			</plugin>
+		<plugin>
+		    <groupId>org.apache.maven.plugins</groupId>
+		    <artifactId>maven-compiler-plugin</artifactId>
+		    <version>3.11.0</version>
+		    <configuration>
+		        <fork>true</fork>
+		        <executable>${javacomplier.location}</executable> <!--PATH TO JAVAC -->      
+		    </configuration>
+		  </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>

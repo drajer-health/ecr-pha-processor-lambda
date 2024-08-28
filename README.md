@@ -56,7 +56,7 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 1. Go to the newly created Role.
 
-2. Under `Permissions` tab click on `Add inline Policy`
+2. Under `Permissions` tab click on `Create inline Policy`
 
 3. Click on `{ } JSON` tab and ad the following security policy. Replace the `S3-BUCKET-NAME` with your S3 bucket name.
 	```
@@ -81,13 +81,19 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 }
 	``
 
-4. Click on button `Review policy` and then click `Save changes`
+4. Click on button `Next` 
 
-5. Come back to your AWS Lambda Function and navigate to `Configuration` tab.
+5. Enter policy name `ecrPhaProcessorLamdaPolcy`
 
-6. Go to the `General Configuration` and click on `Edit` button. Increase the Timeout to minimum 1 minute. 
+6. Click on `Create policy`
 
-7.  Under the "Code" tab select "Upload from"
+7. Come back to your AWS Lambda Function and navigate to `Configuration` tab.
+
+8. Go to the `General Configuration` and click on `Edit` button. Increase the Timeout to minimum 1 minute. 
+
+9. Click on `Save`
+
+10.  Under the "Code" tab select "Upload from"
 
 8. Select .zip or .jar file option.
 

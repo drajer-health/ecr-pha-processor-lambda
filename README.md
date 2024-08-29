@@ -58,25 +58,29 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 2. Under `Permissions` tab click on `Create inline Policy`
 
-3. Click on `{ } JSON` tab and ad the following security policy. Replace the `S3-BUCKET-NAME` with your S3 bucket name.
+3. Click on `{ } JSON` tab and ad the following security policy. Replace the `SQS-NAME` with your SQS name.
 	```
 	{
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Sid": "ListObjectsInBucket",
-            "Action": [
-                "s3:GetObjectVersion",
-                "s3:GetBucketLocation",
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:PutObjectAcl"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:s3:::S3-BUCKET-NAME/*"
-            ]
-        }
+           {
+                "Sid": "Statement1",
+                "Effect": "Allow",
+                "Action": "sqs:ReceiveMessage",
+                "Resource": "arn:aws:sqs:SQS-NAME"
+            },
+            {
+                "Sid": "Statement2",
+                "Effect": "Allow",
+                "Action": "sqs:DeleteMessage",
+                "Resource": "arn:aws:sqs:SQS-NAME"
+            },
+            {
+                "Sid": "Statement3",
+                "Effect": "Allow",
+                "Action": "sqs:GetQueueAttributes",
+                "Resource": "arn:aws:sqs:SQS-NAME"
+            }
     ]
 }
 	``
@@ -135,13 +139,11 @@ Lambda function needs to be triggered, for this we need to add and configure the
 2. Click on `Add trigger`
 
 3. From the `Trigger configuration` drop down select
-	`S3` option
+    `SQS` option
 
-4. From the `Bucket` drop down select your bucket that this lambda function will listen.
+4. From the `SQS queque` drop down select your SQS that this lambda function will listen.
 
-5. Add the `Suffix` to add filter to the function. For example `RR_FHIR.xml`
-
-6. Select the acknowledgement and click Add.
+6. Click Add.
 
 
 ### At this point the Lambda function is created and configured to listen to the S3 Bucket.

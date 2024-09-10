@@ -58,32 +58,27 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 2. Under `Permissions` tab click on `Create inline Policy`
 
-3. Click on `{ } JSON` tab and ad the following security policy. Replace the `SQS-NAME` with your SQS name.
-	```
+3. Click on `{ } JSON` tab and ad the following security policy. Replace the `S3-BUCKET-NAME` with your S3 name.
+```
 	{
+ {
     "Version": "2012-10-17",
     "Statement": [
-           {
-                "Sid": "Statement1",
-                "Effect": "Allow",
-                "Action": "sqs:ReceiveMessage",
-                "Resource": "arn:aws:sqs:SQS-NAME"
-            },
-            {
-                "Sid": "Statement2",
-                "Effect": "Allow",
-                "Action": "sqs:DeleteMessage",
-                "Resource": "arn:aws:sqs:SQS-NAME"
-            },
-            {
-                "Sid": "Statement3",
-                "Effect": "Allow",
-                "Action": "sqs:GetQueueAttributes",
-                "Resource": "arn:aws:sqs:SQS-NAME"
-            }
+        {
+            "Sid": "ListObjectsInBucketS3",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObjectVersion",
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::S3-BUCKET-NAME/*"
+        }
     ]
 }
-	``
+```
 
 4. Click on button `Next` 
 
@@ -131,6 +126,70 @@ To process the file from the S3 bucket, lambda function needs to be configured t
 |HTTP_POST_URL	  | <- HTTP end point reference to eicr responder module ->  |
 
 eg: http://<<EICR RESPONDER SERVER>>:<<PORT>>/eicrresponder/api/receiveeicrrdata
+
+### SQS Queue
+Choose the SQS queue and click `Create Queue` 
+
+1. Select `Standard` and Enter the Name for the Queue as `fhir-ecr1-sqs-queue`
+   
+3. Enter 10 minutes as Visibility timeout
+   
+4. Server-Side encryption as `disabled`
+   
+5. Access Policy `Advanced`
+   
+6. Make neccessary changes to below and copy as in-line policy
+   ```
+   {
+  "Version": "2012-10-17",
+  "Id": "__default_policy_ID",
+  "Statement": [
+    {
+      "Sid": "__owner_statement",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Action": "SQS:SendMessage",
+      "Resource": "arn:aws:sqs:us-east-1:<<AWS_ACCOUNT_INFO>>:<<QUEUE_NAME>>",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "<<AWS ACCOUNT INFO>> "
+        },
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:s3:::<<S3 BUCKET NAME>>"
+        }
+      }
+    }
+  ]
+}
+```
+
+6. Click Save
+
+
+### S3 Event Notification
+
+1. Go to S3 bucket and to Properties Tab
+
+2. Scroll down to `Event Notification` and Click `Create event Notification`
+
+3. Enter Name `rr-fhir-event`
+
+4. Enter Suffix as `RR_FHIR.xml`
+
+5. Event Types as `All object create events`
+
+6. Destination as `SQS queue`
+
+7. Specify SQS queue 
+    Enter SQS queque ARN
+    
+    `arn:aws:<<SQS ARN >>`
+
+8. Click `Save Changes` 
+
+
 
 ### Lambda Trigger
 Lambda function needs to be triggered, for this we need to add and configure the trigger. Follow the following steps to add the trigger to your lambda function.

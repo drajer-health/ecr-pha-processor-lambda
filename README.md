@@ -131,7 +131,7 @@ eg: http://<<EICR RESPONDER SERVER>>:<<PORT>>/eicrresponder/api/receiveeicrrdata
 ### SQS Queue
 Choose the SQS queue and click `Create Queue` 
 
-1. Select `Standard` and Enter the Name for the Queue as `fhir-ecr1-pha-processor-sqs-queue`
+1. Select `Standard` and Enter the Name for the Queue as `eg: fhir-ecr1-pha-processor-sqs-queue`
    
 3. Enter 10 minutes as Visibility timeout
    
@@ -153,7 +153,7 @@ Choose the SQS queue and click `Create Queue`
         "Service": "s3.amazonaws.com"
       },
       "Action": "SQS:SendMessage",
-      "Resource": "arn:aws:sqs:us-east-1:<<AWS_ACCOUNT_INFO>>:<<QUEUE_NAME>>",
+      "Resource": "arn:aws:sqs:us-east-1:<<AWS_ACCOUNT_INFO>>:<<QUEUE_NAME (from the SQS Queue Step 1)>>",
       "Condition": {
         "StringEquals": {
           "aws:SourceAccount": "<<AWS ACCOUNT INFO>>"
@@ -176,7 +176,7 @@ Choose the SQS queue and click `Create Queue`
 
 2. Scroll down to `Event Notification` and Click `Create event Notification`
 
-3. Enter Name `rr-fhir-event`
+3. Enter Name `eg: rr-fhir-event`
 
 4. Enter Suffix as `RR_FHIR.xml`
 
@@ -185,9 +185,9 @@ Choose the SQS queue and click `Create Queue`
 6. Destination as `SQS queue`
 
 7. Specify SQS queue 
-    Enter SQS queque ARN
+    Enter SQS queque 
     
-    `arn:aws:<<SQS ARN >>`
+    `arn:aws:<<SQS NAME (from the SQS Queue Step 1)>>`
 
 8. Click `Save Changes` 
 
@@ -202,7 +202,7 @@ Lambda function needs to be triggered, for this we need to add and configure the
 3. From the `Trigger configuration` drop down select
     `SQS` option
 
-4. From the `SQS queque` drop down select your SQS that this lambda function will listen.
+4. From the `SQS queque (from the SQS Queue Step 1)` drop down select your SQS that this lambda function will listen.
 
 6. Click Add.
 

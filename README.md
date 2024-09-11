@@ -89,7 +89,7 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 7. Come back to your AWS Lambda Function and navigate to `Configuration` tab.
 
-8. Go to the `General Configuration` and click on `Edit` button. Increase the Timeout to minimum 1 minute. 
+8. Go to the `General Configuration` and click on `Edit` button. Increase the Timeout to minimum 10 minute. 
 
 9. Click on `Save`
 

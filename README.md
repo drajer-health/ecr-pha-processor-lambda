@@ -130,7 +130,7 @@ eg: http://<<EICR RESPONDER SERVER>>:<<PORT>>/eicrresponder/api/receiveeicrrdata
 ### SQS Queue
 Choose the SQS queue and click `Create Queue` 
 
-1. Select `Standard` and Enter the Name for the Queue as `fhir-ecr1-sqs-queue`
+1. Select `Standard` and Enter the Name for the Queue as `fhir-ecr1-pha-processor-sqs-queue`
    
 3. Enter 10 minutes as Visibility timeout
    
@@ -139,8 +139,9 @@ Choose the SQS queue and click `Create Queue`
 5. Access Policy `Advanced`
    
 6. Make neccessary changes to below and copy as in-line policy
-   ```
-   {
+
+```
+{
   "Version": "2012-10-17",
   "Id": "__default_policy_ID",
   "Statement": [
@@ -154,7 +155,7 @@ Choose the SQS queue and click `Create Queue`
       "Resource": "arn:aws:sqs:us-east-1:<<AWS_ACCOUNT_INFO>>:<<QUEUE_NAME>>",
       "Condition": {
         "StringEquals": {
-          "aws:SourceAccount": "<<AWS ACCOUNT INFO>> "
+          "aws:SourceAccount": "<<AWS ACCOUNT INFO>>"
         },
         "ArnLike": {
           "aws:SourceArn": "arn:aws:s3:::<<S3 BUCKET NAME>>"

@@ -14,19 +14,21 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.S3Event;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.event.S3EventNotification;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.util.IOUtils;
 
-public class PHAProcessorLambdaFunctionHandler implements RequestHandler<S3Event, String> {
+public class PHAProcessorLambdaFunctionHandler implements RequestHandler<SQSEvent, String> {
 
 	private AmazonS3 s3 = AmazonS3ClientBuilder.standard().build();
 
 	@Override
-	public String handleRequest(S3Event event, Context context) {
+	public String handleRequest(SQSEvent event, Context context) {
 
 		context.getLogger().log("Received event: " + event);
 
@@ -39,8 +41,16 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<S3Event
 		context.getLogger().log("HTTP Post URL " + httpPostUrl);
 
 		// Get the object from the event and show its content type
-		String bucket = event.getRecords().get(0).getS3().getBucket().getName();
-		String key = event.getRecords().get(0).getS3().getObject().getKey();
+		SQSMessage message = event.getRecords().get(0);
+		String messageBody = message.getBody();
+		context.getLogger().log("messageBody : " + messageBody);
+		S3EventNotification s3EventNotification = S3EventNotification.parseJson(messageBody);
+		context.getLogger().log("s3EventNotification getRecords size : " + s3EventNotification.getRecords().size());
+		S3EventNotification.S3EventNotificationRecord record = s3EventNotification.getRecords().get(0);
+
+		String bucket = record.getS3().getBucket().getName();		
+		String key = record.getS3().getObject().getKey();
+		
 		String keyPrefix = key.substring(0, key.lastIndexOf(File.separator) + 1);
 
 		try {

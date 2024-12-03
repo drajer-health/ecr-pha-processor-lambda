@@ -1,16 +1,6 @@
 package com.drajer.ecr.pha.processor;
 
 import java.io.File;
-import java.io.IOException;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -56,6 +46,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<SQSEven
 		try {
 			pushToPHA(bucket, keyPrefix, context);
 			
+			/*
 			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 			builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
@@ -94,8 +85,9 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<SQSEven
 			context.getLogger().log("Response Code: " + response.getStatusLine().getStatusCode());
 			context.getLogger().log("Response Reason: " + response.getStatusLine().getReasonPhrase());
 			context.getLogger().log("Response: " + response.toString());
+			*/
 			return "Successfully pushed files.";
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			context.getLogger().log(e.getLocalizedMessage());
 

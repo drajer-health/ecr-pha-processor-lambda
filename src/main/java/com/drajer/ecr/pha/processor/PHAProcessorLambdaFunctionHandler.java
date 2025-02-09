@@ -130,7 +130,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			context.getLogger().log("BucketName : " + bucket);
 			context.getLogger().log("Key from lambda input :" + key);
 
-			key.replace("RRMessageFHIRV2", "eCRMessageV2");
+			key = key.replace("RRMessageFHIRV2", "eCRMessageV2");
 			
 			context.getLogger().log("Key after replace to get CDA EICR :" + key);
 
@@ -174,13 +174,15 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				context.getLogger().log("Output not generated check logs ");
 			} else {
 				context.getLogger().log("Writing output file ");
-				key.replace("eCRMessageV2", "eICRMessageFHIRV2");
+				key = key.replace("eCRMessageV2", "eICRMessageFHIRV2");
+				context.getLogger().log("key value before writing file :" + key);
 				this.writeFhirFile(responseEICRFHIR, bucket, key, context);
 				context.getLogger().log("Output Generated  " + bucket + "/" + key);
 				
 				// Call Validation on RR FHIR
 
-				key.replace("eICRMessageFHIRV2", "eICRValidationMessageFHIRV2");
+				key= key.replace("eICRMessageFHIRV2", "eICRValidationMessageFHIRV2");
+				context.getLogger().log("key value before validation :" + key);
 				validate(responseEICRFHIR, bucket, key, context);
 			}
 			
@@ -192,7 +194,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 		    Bundle reportingBundle = (Bundle) getBundle(eicrBundle,rrBundle,context);
 		    
 		    // write bundle
-			key.replace("eICRMessageFHIRV2", "PHAeICRMessageV2");
+		    key = key.replace("eICRMessageFHIRV2", "PHAeICRMessageV2");
 			this.writeFhirFile(convertBundleToString(reportingBundle), bucket, key, context);
 			context.getLogger().log("Output Generated  " + bucket + "/" + key);
 			validate(responseEICRFHIR, bucket, key, context);

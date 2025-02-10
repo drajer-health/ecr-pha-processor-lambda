@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.drajer.ecr.pha</groupId>
 	<artifactId>ecr-pha-processor-lambda</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 	<properties>
 		<maven.test.skip>true</maven.test.skip>

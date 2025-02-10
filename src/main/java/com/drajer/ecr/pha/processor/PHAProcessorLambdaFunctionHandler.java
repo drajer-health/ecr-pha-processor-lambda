@@ -75,7 +75,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 	public static final int DEFAULT_BUFFER_SIZE = 8192;
 	private static PHAProcessorLambdaFunctionHandler instance;
 	private AmazonS3 s3 = AmazonS3ClientBuilder.standard().build();
-	
+
 	public static String DEFAULT_VERSION = "1";
 	public static String CONTENT_BUNDLE_PROFILE = "http://hl7.org/fhir/us/ecr/StructureDefinition/us-ph-content-bundle";
 	public static String BUNDLE_REL_URL = "Bundle/";
@@ -83,12 +83,10 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 	public static String MESSAGE_TYPE = "http://hl7.org/fhir/us/ecr/CodeSystem/us-ph-messageheader-message-types";
 	public static String NAMED_EVENT_URL = "http://hl7.org/fhir/us/ecr/CodeSystem/us-ph-triggerdefinition-namedevents";
 	public static String tmpdir = System.getProperty("java.io.tmpdir");
-	private static final String CHECK_YES = "YES";
-	private static String META_PROFILE ="http://hl7.org/fhir/us/ecr/StructureDefinition/us-ph-reporting-bundle";
-	
+	private static String META_PROFILE = "http://hl7.org/fhir/us/ecr/StructureDefinition/us-ph-reporting-bundle";
 
 	public PHAProcessorLambdaFunctionHandler() throws IOException {
-		// Load the Saxon processor and transformer
+//		// Load the Saxon processor and transformer
 		this.processor = createSaxonProcessor();
 		this.transformer = initializeTransformer();
 	}
@@ -124,21 +122,24 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 
 			String bucket = bucketNode.get("name").asText();
 			String key = keyObjectNode.get("key").asText(); // record.getS3().getObject().getKey();
-			String rrFHIRKey = key; //RRValidationMessageFHIRV2 contains RR FHIR
-			
+			String rrFHIRKey = key; // RRMessageFHIRV2 contains RR FHIR
+
 			// context.getLogger().log("EventName : " + record.getEventName());
 			context.getLogger().log("BucketName : " + bucket);
 			context.getLogger().log("Key from lambda input :" + key);
 
-			key = key.replace("RRMessageFHIRV2", "eCRMessageV2");
-			
+			key = key.replace("RRMessageFHIRV2", "eCRMessageV2"); // same name -- content EICR-CDA
+
 			context.getLogger().log("Key after replace to get CDA EICR :" + key);
 
 //		String fileContent = getFileContent(bucket,key,context);
 
 			S3Object s3Object = s3.getObject(new GetObjectRequest(bucket, key));
 			input = s3Object.getObjectContent();
-			outputFile = new File("/tmp/" + key);
+
+			UUID randomUUID = UUID.randomUUID();
+
+			outputFile = new File("/tmp/" + randomUUID);
 
 			outputFile.setWritable(true);
 
@@ -160,7 +161,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			context.getLogger().log("Output File -- Length:" + outputFile.length());
 			context.getLogger().log("---- s3Object-Content....:" + s3Object.getObjectMetadata().getContentType());
 
-			UUID randomUUID = UUID.randomUUID();
+			randomUUID = UUID.randomUUID();
 
 			context.getLogger().log("--- Before Transformation OUTPUT---::" + outputFile.getAbsolutePath());
 			context.getLogger().log("--- Before Transformation UUID---::" + randomUUID);
@@ -168,7 +169,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			instance.transform(outputFile, randomUUID, context);
 
 			// convert CDA to FHIR format and write output into eICRMessageFHIRV2/.
-			String responseEICRFHIR = getFileContentAsString(randomUUID, context);  // EICR FHIR
+			String responseEICRFHIR = getFileContentAsString(randomUUID, context); // EICR FHIR
 
 			if (StringUtils.isNullOrEmpty(responseEICRFHIR)) {
 				context.getLogger().log("Output not generated check logs ");
@@ -177,29 +178,29 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				key = key.replace("eCRMessageV2", "eICRMessageFHIRV2");
 				context.getLogger().log("key value before writing file :" + key);
 				this.writeFhirFile(responseEICRFHIR, bucket, key, context);
-				context.getLogger().log("Output Generated  " + bucket + "/" + key);
-				
-				// Call Validation on RR FHIR
+				context.getLogger().log("Output Generated  :" + bucket + "/" + key);
 
-				key= key.replace("eICRMessageFHIRV2", "eICRValidationMessageFHIRV2");
+				// Call Validation on RR FHIR
+				key = key.replace("eICRMessageFHIRV2", "eICRValidationMessageFHIRV2");
 				context.getLogger().log("key value before validation :" + key);
 				validate(responseEICRFHIR, bucket, key, context);
 			}
-			
+
 			//
-			String responsRRFHIR = getS3ObjectAsString(bucket, rrFHIRKey,context);  // RR FHIR
-			IParser  target   = FhirContext.forR4().newJsonParser();      // new JSON parser
-		    Bundle eicrBundle = target.parseResource(Bundle.class,responseEICRFHIR);
-		    Bundle rrBundle = target.parseResource(Bundle.class, responsRRFHIR);
-		    Bundle reportingBundle = (Bundle) getBundle(eicrBundle,rrBundle,context);
-		    
-		    // write bundle
-		    key = key.replace("eICRMessageFHIRV2", "PHAeICRMessageV2");
+			String responsRRFHIR = getS3ObjectAsString(bucket, rrFHIRKey, context); // RR FHIR
+			IParser target = FhirContext.forR4().newXmlParser(); // new XML parser
+			Bundle eicrBundle = target.parseResource(Bundle.class, responseEICRFHIR);
+			Bundle rrBundle = target.parseResource(Bundle.class, responsRRFHIR);
+			Bundle reportingBundle = (Bundle) getBundle(eicrBundle, rrBundle, context);
+
+			// write bundle
+			key = key.replace("eICRValidationMessageFHIRV2", "PHAeICRMessageV2");
+			context.getLogger().log("write bundle :" + key);
 			this.writeFhirFile(convertBundleToString(reportingBundle), bucket, key, context);
 			context.getLogger().log("Output Generated  " + bucket + "/" + key);
+			key = key.replace("PHAeICRMessageV2", "PHAeICRValidationMessageV2");
 			validate(responseEICRFHIR, bucket, key, context);
-			
-			
+
 			return "SUCCESS";
 		} catch (Exception e) {
 			context.getLogger().log(e.getMessage());
@@ -284,6 +285,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 					.getFile("classpath:hl7-xml-transforms/transforms/cda2fhir-r4/NativeUUIDGen-cda2fhir.xslt");
 			processor.setConfigurationProperty(FeatureKeys.ALLOW_MULTITHREADING, true);
 			XsltCompiler compiler = processor.newXsltCompiler();
+
 //			compiler.setJustInTimeCompilation(true);
 			XsltExecutable executable = compiler.compile(new StreamSource(xsltFile));
 			return executable.load();
@@ -337,21 +339,22 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			context.getLogger().log("CONTENT TYPE: " + contentType);
 			responseStr = IOUtils.toString(response.getObjectContent());
 		} catch (Exception e) {
-			System.out.println("Exception ::::"+e.getMessage());
+			System.out.println("Exception ::::" + e.getMessage());
 			e.printStackTrace();
 			context.getLogger().log(String.format("Error getting object %s from bucket %s. Make sure they exist and"
 					+ " your bucket is in the same region as this function.", fileName, bucket));
 		}
 		return responseStr;
-	}	
+	}
+
 	private void validate(String requestBody, String theBucketName, String theKeyPrefix, Context context) {
 		// URL where the request will be forwarded
 		String httpPostUrl = System.getenv("VALIDATION_URL");
 
 		if (httpPostUrl == null) {
-			throw new RuntimeException("HTTP_POST_URL Environment variable not configured");
+			throw new RuntimeException("VALIDATION_URL Environment variable not configured");
 		}
-		context.getLogger().log("HTTP Post URL " + httpPostUrl);
+		context.getLogger().log("VALIDATION_URL :" + httpPostUrl);
 
 		int timeout = 15;
 		RequestConfig config = RequestConfig.custom().setConnectTimeout(timeout * 1000)
@@ -360,9 +363,9 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 		try {
 			// Add content type as application / json
 			HttpPost postRequest = new HttpPost(httpPostUrl);
-			postRequest.addHeader("accept", "application/json");
+			postRequest.addHeader("accept", "application/xml");
 			StringEntity input = new StringEntity(requestBody);
-			input.setContentType("application/json");
+			input.setContentType("application/xml");
 			postRequest.setEntity(input);
 
 			context.getLogger().log("Forwarding the request to FHIR Validator ");
@@ -385,7 +388,6 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				context.getLogger().log("Post Message failed with Code: " + response.getStatusLine().getStatusCode());
 				context.getLogger().log("Post Message failed reason: " + response.getStatusLine().getReasonPhrase());
 				context.getLogger().log("Post Message response body: " + response.toString());
-
 				throw new RuntimeException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
 			}
 			StringBuilder outputStr = new StringBuilder();
@@ -419,14 +421,14 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			}
 		}
 	}
-	
-	public static Bundle getBundle(Bundle eicrBundle, Bundle rrBundle,Context context) {
-		Bundle reportingBundle = (Bundle) getBundle(eicrBundle,context);
+
+	public static Bundle getBundle(Bundle eicrBundle, Bundle rrBundle, Context context) {
+		Bundle reportingBundle = (Bundle) getBundle(eicrBundle, context);
 		// Add the rr Bundle.
 		reportingBundle.addEntry(new BundleEntryComponent().setResource(rrBundle));
 		return reportingBundle;
-	}	
-	
+	}
+
 	/**
 	 * create reporting bundle
 	 * 
@@ -434,7 +436,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 	 * @return ResponseEntity<String>
 	 * 
 	 */
-	public static Resource getBundle(Bundle bundle,Context context) {
+	public static Resource getBundle(Bundle bundle, Context context) {
 		// Create the bundle
 		Bundle reportingBundle = new Bundle();
 		try {
@@ -459,80 +461,77 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 
 			// Add the document Bundle.
 			reportingBundle.addEntry(new BundleEntryComponent().setResource(bundle));
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			context.getLogger().log("Error while create bundle :" + e.getMessage());
 		}
 		return reportingBundle;
-	}	
-	
+	}
 
 	public static String getUUID() {
 		UUID uuid = UUID.randomUUID();
 		String randomUUID = uuid.toString();
 		return randomUUID;
-	}	
-	
-	
-	  public static Meta getMeta(String version, String profile) {
-		    Meta m = new Meta();
-		    m.setVersionId(version);
-		    CanonicalType ct = new CanonicalType();
-		    ct.setValueAsString(profile);
-		    List<CanonicalType> profiles = new ArrayList<>();
-		    profiles.add(ct);
-		    m.setProfile(profiles);
-		    m.setLastUpdated(Date.from(Instant.now()));
-		    return m;
-		  }
-	  
-		public static MessageHeader createMessageHeader(Context context) {
+	}
 
-			MessageHeader header = new MessageHeader();
-			try {
+	public static Meta getMeta(String version, String profile) {
+		Meta m = new Meta();
+		m.setVersionId(version);
+		CanonicalType ct = new CanonicalType();
+		ct.setValueAsString(profile);
+		List<CanonicalType> profiles = new ArrayList<>();
+		profiles.add(ct);
+		m.setProfile(profiles);
+		m.setLastUpdated(Date.from(Instant.now()));
+		return m;
+	}
 
-				header.setId(UUID.randomUUID().toString());
-				header.setMeta(getMeta(DEFAULT_VERSION, MESSAGE_HEADER_PROFILE));
+	public static MessageHeader createMessageHeader(Context context) {
 
-				// Set message type.
-				Coding c = new Coding();
-				c.setSystem(MESSAGE_TYPE);
-				header.setEvent(c);
+		MessageHeader header = new MessageHeader();
+		try {
 
-				// set destination
-				List<MessageDestinationComponent> mdcs = new ArrayList<MessageDestinationComponent>();
+			header.setId(UUID.randomUUID().toString());
+			header.setMeta(getMeta(DEFAULT_VERSION, MESSAGE_HEADER_PROFILE));
 
-				MessageDestinationComponent mdc = new MessageDestinationComponent();
-				mdc.setEndpoint("http://");
-				mdcs.add(mdc);
-				header.setDestination(mdcs);
+			// Set message type.
+			Coding c = new Coding();
+			c.setSystem(MESSAGE_TYPE);
+			header.setEvent(c);
 
-				// Set source.
-				MessageSourceComponent msc = new MessageSourceComponent();
-				msc.setEndpoint("http://");
-				header.setSource(msc);
+			// set destination
+			List<MessageDestinationComponent> mdcs = new ArrayList<MessageDestinationComponent>();
 
-				// Set Reason.
-				CodeableConcept cd = new CodeableConcept();
-				Coding coding = new Coding();
-				coding.setSystem(NAMED_EVENT_URL);
-				cd.addCoding(coding);
-				header.setReason(cd);
-			} catch (Exception e) {
-				e.printStackTrace();
-				context.getLogger().log("Error while createMessageHeader :" + e.getMessage());
-			}
-			return header;
+			MessageDestinationComponent mdc = new MessageDestinationComponent();
+			mdc.setEndpoint("http://");
+			mdcs.add(mdc);
+			header.setDestination(mdcs);
+
+			// Set source.
+			MessageSourceComponent msc = new MessageSourceComponent();
+			msc.setEndpoint("http://");
+			header.setSource(msc);
+
+			// Set Reason.
+			CodeableConcept cd = new CodeableConcept();
+			Coding coding = new Coding();
+			coding.setSystem(NAMED_EVENT_URL);
+			cd.addCoding(coding);
+			header.setReason(cd);
+		} catch (Exception e) {
+			e.printStackTrace();
+			context.getLogger().log("Error while createMessageHeader :" + e.getMessage());
 		}
+		return header;
+	}
 
-	    public static String convertBundleToString(Bundle bundle) {
-	        // Create a FHIR context for R4
-	        FhirContext fhirContext = FhirContext.forR4();
-	        // Create a JSON parser
-	        IParser parser = fhirContext.newJsonParser().setPrettyPrint(true);
-	        // Serialize the bundle to a JSON string
-	        return parser.encodeResourceToString(bundle);
-	    }		
+	public static String convertBundleToString(Bundle bundle) {
+		// Create a FHIR context for R4
+		FhirContext fhirContext = FhirContext.forR4();
+		// Create a JSON parser
+		IParser parser = fhirContext.newJsonParser().setPrettyPrint(true);
+		// Serialize the bundle to a JSON string
+		return parser.encodeResourceToString(bundle);
+	}
 }
-

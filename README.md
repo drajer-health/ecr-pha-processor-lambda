@@ -23,11 +23,12 @@ Import Project as Maven Project Build:
 Navigate to `ecr-pha-processor-lambda` directory  `..../` and run Maven build to build lambda jar file.
 
 ```
+$ mvn clean
 
 $ mvn clean install
 ```
 
-This will generate a war file under target/ecr-pha-processor-lambda-1.0.0.jar.
+This will generate a jar file under target/ecr-pha-processor-lambda-x.x.x.jar.
 
 ## AWS Lambda
 
@@ -58,13 +59,48 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 2. Under `Permissions` tab click on `Create inline Policy`
 
-3. Click on `{ } JSON` tab and ad the following security policy. Replace the `S3-BUCKET-NAME` with your S3 name.
+3. Click on `{ } JSON` tab and ad the following security policy. 
+
+   Replace the `SQS-NAME` with your SQS name.
+
+   Replace the `S3-BUCKET-NAME` with your S3 bucket name.
+
+   Replace the `S3-LIC_BUCKET-NAME` with your S3 bucket name for saxon license.
 
 ```
-	{
- {
+{
     "Version": "2012-10-17",
     "Statement": [
+        {
+            "Sid": "Statement1",
+            "Effect": "Allow",
+            "Action": "sqs:ReceiveMessage",
+            "Resource": "arn:aws:sqs:SQS-NAME"
+        },
+        {
+            "Sid": "Statement2",
+            "Effect": "Allow",
+            "Action": "sqs:DeleteMessage",
+            "Resource": "arn:aws:sqs:SQS-NAME"
+        },
+        {
+            "Sid": "Statement3",
+            "Effect": "Allow",
+            "Action": "sqs:GetQueueAttributes",
+            "Resource": "arn:aws:sqs:SQS-NAME"
+        },
+        {
+            "Sid": "ListObjectsInBucket",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObjectVersion",
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::S3-LIC_BUCKET-NAME/*"
+        },
         {
             "Sid": "ListObjectsInBucketS3",
             "Effect": "Allow",
@@ -80,6 +116,7 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
     ]
 }
 ```
+NOTE: Ensure proper authorization or access are added 
 
 4. Click on button `Next` 
 
@@ -97,7 +134,7 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 8. Select .zip or .jar file option.
 
-9. Click upload and navigate to your local workspace target folder and select ecr-pha-processor-lambda-1.0.0.jar and click "Save".
+9. Click upload and navigate to your local workspace target folder and select ecr-pha-processor-lambda-x.x.x.jar and click "Save".
 
 10. Click on "Edit" on "Runtime Settings".
 
@@ -124,14 +161,15 @@ To process the file from the S3 bucket, lambda function needs to be configured t
 
 |Environment Variable| Value |
 |--|--|
-|HTTP_POST_URL	  | <- HTTP end point reference to eicr responder module ->  |
+|VALIDATION_URL	  | <- URL for Validaiton ->  |
+|LICENSE_BUCKET_NAME   | <- s3 bucket name where license is stored ->  |
 
-eg: http://<<EICR RESPONDER SERVER>>:<<PORT>>/eicrresponder/api/receiveeicrrdata
+eg VALIDATION_URL : https://<<Fhir-Router:Port>>/fhirvalidator/fhir/Bundle/$validate
 
 ### SQS Queue
 Choose the SQS queue and click `Create Queue` 
 
-1. Select `Standard` and Enter the Name for the Queue as `eg: fhir-ecr1-pha-processor-sqs-queue`
+1. Select `Standard` and Enter the Name for the Queue as `eg: fhir-pha-sqs-queue`
    
 3. Enter 10 minutes as Visibility timeout
    
@@ -169,8 +207,9 @@ Choose the SQS queue and click `Create Queue`
 
 6. Click Save
 
+Either set it as S3 Event or AWS Event Bridge
 
-### S3 Event Notification
+### S3 Event Notification (Optional)
 
 1. Go to S3 bucket and to Properties Tab
 
@@ -178,7 +217,7 @@ Choose the SQS queue and click `Create Queue`
 
 3. Enter Name `eg: rr-fhir-event`
 
-4. Enter Suffix as `RR_FHIR.xml`
+4. Enter Prefix as `RRMessageFHIRV2`
 
 5. Event Types as `All object create events`
 
@@ -192,6 +231,54 @@ Choose the SQS queue and click `Create Queue`
 8. Click `Save Changes` 
 
 
+### Amazon EventBridge
+Choose the Amazon EventBridge and click `Rules` 
+
+1. Select `Create Rule` and Enter the Name for the Queue as `eg: eicr-cda-2-fhir`
+   
+3. Click "Next"
+   
+4. Under `Sample event - optional` section select Sample event type `Enter my own`
+   
+5. Access Policy `Advanced`
+   
+6. Past the below Json and change Bucket name 
+
+```
+{
+  "detail": {
+    "bucket": {
+      "name": ["<<BUCKET_NAME>>"]
+    },
+    "object": {
+      "key": [{
+        "prefix": "RRMessageFHIRV2/"
+      }]
+    }
+  },
+  "detail-type": ["Object Created"],
+  "source": ["aws.s3"]
+}
+```
+
+7. Under `Creation method` section select `Custom pattern (JSON editor)`
+
+8. Under `Event pattern ` section `Event source`  drop down select `AWS services` 
+
+9. Under `AWS service` section select `Simple Queue Service (SQS)` 
+
+10. Under `Event type` section select `All Event` 
+
+11. Click `Next`
+
+12. Under `Target 1` section `Queue`  select `<<SQS queue name >>` 
+
+13. Click `Next`
+
+14. Click `Next`
+
+15. Click `Create rule`
+
 
 ### Lambda Trigger
 Lambda function needs to be triggered, for this we need to add and configure the trigger. Follow the following steps to add the trigger to your lambda function.
@@ -204,7 +291,53 @@ Lambda function needs to be triggered, for this we need to add and configure the
 
 4. From the `SQS queque (from the SQS Queue Step 1)` drop down select your SQS that this lambda function will listen.
 
-6. Click Add.
+5. Click Add.
 
 
 ### At this point the Lambda function is created and configured to listen to the S3 Bucket.
+
+
+### S3 Saxon License
+
+Here are the steps to store the Saxon license in an S3 bucket and configure your AWS Lambda
+function to use the bucket name as an environment variable:
+
+1. Create an S3 Bucket (if you don't already have one):
+    Go to the AWS Management Console.
+    Navigate to S3.
+    Click on "Create bucket."
+    Choose a unique name for your bucket and select your preferred region.
+    Click "Create bucket."
+
+2. Upload the Saxon License File:
+    In the S3 console, click on your bucket name to open it and create & open license folder if it doesn’t exis
+    Click the "Upload" button.
+    Select the Saxon license file (e.g., saxon-license.lic) from your local file system.
+    Optionally, set the permissions for the file based on your access requirements.
+    Click "Upload."
+
+3. Set Up Environment Variable in Lambda
+    Go to the AWS Management Console.
+    Navigate to the Lambda service.
+    Find and select the Lambda function that you want to configure.
+    Scroll down to the "Environment variables" section.
+    Click on "Edit."
+    Add a new key-value pair:
+        Key: BUCKET_NAME
+        Value: <your-bucket-name> (replace this with the name of your S3
+            bucket)
+
+4. Test Your Lambda Function
+    In the AWS Lambda console, you can create a test event based on the input your
+    Lambda function expects.
+    Click on "Test" to execute the function and check the logs to verify that it
+    retrieves the license file from S3.
+
+5. Check CloudWatch Logs
+    If there are any issues, check the CloudWatch logs for your Lambda function to
+    debug the problem.
+
+By following these steps, you'll be able to store the Saxon license in an S3 bucket and configure
+your Lambda function to use the bucket name as an environment variable. If you have any
+further questions or need assistance with anything else, feel free to ask!
+

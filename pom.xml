@@ -4,13 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.drajer.ecr.pha</groupId>
 	<artifactId>ecr-pha-processor-lambda</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 	<properties>
 		<maven.test.skip>true</maven.test.skip>
 	    <maven.compiler.target>17</maven.compiler.target>
 	    <maven.compiler.source>17</maven.compiler.source>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
+	    <fhir.version>5.4.0</fhir.version>
 	</properties>
 	<build>
 		<plugins>
@@ -39,6 +40,66 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<executions>
+					<!-- Saxon PE -->
+					<execution>
+						<id>saxon-pe</id>
+						<phase>clean</phase>
+						<configuration>
+							<file>${basedir}/libs/saxon-pe-12.5.jar</file>
+							<groupId>net.sf.saxon</groupId>
+							<artifactId>saxon-pe</artifactId>
+							<version>12.5</version>
+							<packaging>jar</packaging>
+							<generatePom>true</generatePom>
+						</configuration>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+					</execution>
+
+					<!-- XML Resolver -->
+					<execution>
+						<id>xmlresolver</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+						<configuration>
+							<file>${basedir}/libs/xmlresolver-5.2.2.jar</file>
+							<groupId>net.sf.saxon</groupId>
+							<artifactId>xmlresolver</artifactId>
+							<version>5.2.2</version>
+							<packaging>jar</packaging>
+							<generatePom>true</generatePom>
+						</configuration>
+					</execution>
+
+					<!-- JLine -->
+					<execution>
+						<id>jline</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+						<configuration>
+							<file>${basedir}/libs/jline-2.14.6.jar</file>
+							<groupId>net.sf.saxon</groupId>
+							<artifactId>jline</artifactId>
+							<version>2.14.6</version>
+							<packaging>jar</packaging>
+							<generatePom>true</generatePom>
+						</configuration>
+					</execution>
+
+				</executions>
+			</plugin>
+			
+			
 		</plugins>
 	</build>
 
@@ -96,6 +157,56 @@
 		    <groupId>javax.xml.bind</groupId>
 		    <artifactId>jaxb-api</artifactId>
 		    <version>2.3.1</version>
-		</dependency>        
+		</dependency>      
+		
+		<dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>saxon-pe</artifactId>
+			<version>12.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>xmlresolver</artifactId>
+			<version>5.2.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>jline</artifactId>
+			<version>2.14.6</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>5.3.10</version>
+		</dependency>
+
+		<!-- FHIR Dependencies -->
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-base</artifactId>
+			<version>${fhir.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-structures-r4</artifactId>
+			<version>${fhir.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-validation-resources-r4</artifactId>
+			<version>${fhir.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-client</artifactId>
+			<version>${fhir.version}</version>
+		</dependency>
+						  
 	</dependencies>
 </project>

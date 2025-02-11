@@ -116,6 +116,7 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
     ]
 }
 ```
+NOTE: Ensure proper authorization or access are added 
 
 4. Click on button `Next` 
 
@@ -133,7 +134,7 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 8. Select .zip or .jar file option.
 
-9. Click upload and navigate to your local workspace target folder and select ecr-pha-processor-lambda-1.0.0.jar and click "Save".
+9. Click upload and navigate to your local workspace target folder and select ecr-pha-processor-lambda-x.x.x.jar and click "Save".
 
 10. Click on "Edit" on "Runtime Settings".
 
@@ -163,12 +164,12 @@ To process the file from the S3 bucket, lambda function needs to be configured t
 |VALIDATION_URL	  | <- URL for Validaiton ->  |
 |LICENSE_BUCKET_NAME   | <- s3 bucket name where license is stored ->  |
 
-eg VALIDATION_URL : http://<<EICR RESPONDER SERVER>>:<<PORT>>/eicrresponder/api/receiveeicrrdata
+eg VALIDATION_URL : http://<<Fhir-Router:Port>>/fhirvalidator/fhir/Bundle/$validate
 
 ### SQS Queue
 Choose the SQS queue and click `Create Queue` 
 
-1. Select `Standard` and Enter the Name for the Queue as `eg: fhir-ecr1-pha-processor-sqs-queue`
+1. Select `Standard` and Enter the Name for the Queue as `eg: fhir-pha-sqs-queue`
    
 3. Enter 10 minutes as Visibility timeout
    
@@ -206,8 +207,9 @@ Choose the SQS queue and click `Create Queue`
 
 6. Click Save
 
+Either set it as S3 Event or AWS Event Bridge
 
-### S3 Event Notification
+### S3 Event Notification (Optional)
 
 1. Go to S3 bucket and to Properties Tab
 
@@ -232,7 +234,7 @@ Choose the SQS queue and click `Create Queue`
 ### Amazon EventBridge
 Choose the Amazon EventBridge and click `Rules` 
 
-1. Select `Create Rule` and Enter the Name for the Queue as `eg: cda-2-fhir`
+1. Select `Create Rule` and Enter the Name for the Queue as `eg: eicr-cda-2-fhir`
    
 3. Click "Next"
    
@@ -250,7 +252,7 @@ Choose the Amazon EventBridge and click `Rules`
     },
     "object": {
       "key": [{
-        "prefix": "FHIRConvertSubmissionV2/"
+        "prefix": "RRMessageFHIRV2/"
       }]
     }
   },

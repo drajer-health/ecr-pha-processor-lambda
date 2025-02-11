@@ -27,7 +27,7 @@ Navigate to `ecr-pha-processor-lambda` directory  `..../` and run Maven build to
 $ mvn clean install
 ```
 
-This will generate a war file under target/ecr-pha-processor-lambda-1.0.0.jar.
+This will generate a jar file under target/ecr-pha-processor-lambda-x.x.x.jar.
 
 ## AWS Lambda
 
@@ -124,7 +124,8 @@ To process the file from the S3 bucket, lambda function needs to be configured t
 
 |Environment Variable| Value |
 |--|--|
-|HTTP_POST_URL	  | <- HTTP end point reference to eicr responder module ->  |
+|VALIDATION_URL	  | <- URL for Validaiton ->  |
+|LICENSE_BUCKET_NAME   | <- s3 bucket name where license is stored ->  |
 
 eg: http://<<EICR RESPONDER SERVER>>:<<PORT>>/eicrresponder/api/receiveeicrrdata
 
@@ -178,7 +179,7 @@ Choose the SQS queue and click `Create Queue`
 
 3. Enter Name `eg: rr-fhir-event`
 
-4. Enter Suffix as `RR_FHIR.xml`
+4. Enter Prefix as `RRMessageFHIRV2`
 
 5. Event Types as `All object create events`
 
@@ -208,3 +209,49 @@ Lambda function needs to be triggered, for this we need to add and configure the
 
 
 ### At this point the Lambda function is created and configured to listen to the S3 Bucket.
+
+
+### S3 Saxon License
+
+Here are the steps to store the Saxon license in an S3 bucket and configure your AWS Lambda
+function to use the bucket name as an environment variable:
+
+1. Create an S3 Bucket (if you don't already have one):
+    Go to the AWS Management Console.
+    Navigate to S3.
+    Click on "Create bucket."
+    Choose a unique name for your bucket and select your preferred region.
+    Click "Create bucket."
+
+2. Upload the Saxon License File:
+    In the S3 console, click on your bucket name to open it and create & open license folder if it doesn’t exis
+    Click the "Upload" button.
+    Select the Saxon license file (e.g., saxon-license.lic) from your local file system.
+    Optionally, set the permissions for the file based on your access requirements.
+    Click "Upload."
+
+3. Set Up Environment Variable in Lambda
+    Go to the AWS Management Console.
+    Navigate to the Lambda service.
+    Find and select the Lambda function that you want to configure.
+    Scroll down to the "Environment variables" section.
+    Click on "Edit."
+    Add a new key-value pair:
+        Key: BUCKET_NAME
+        Value: <your-bucket-name> (replace this with the name of your S3
+            bucket)
+
+4. Test Your Lambda Function
+    In the AWS Lambda console, you can create a test event based on the input your
+    Lambda function expects.
+    Click on "Test" to execute the function and check the logs to verify that it
+    retrieves the license file from S3.
+
+5. Check CloudWatch Logs
+    If there are any issues, check the CloudWatch logs for your Lambda function to
+    debug the problem.
+
+By following these steps, you'll be able to store the Saxon license in an S3 bucket and configure
+your Lambda function to use the bucket name as an environment variable. If you have any
+further questions or need assistance with anything else, feel free to ask!
+

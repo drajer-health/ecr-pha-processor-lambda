@@ -166,23 +166,27 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			context.getLogger().log("--- Before Transformation OUTPUT---::" + outputFile.getAbsolutePath());
 			context.getLogger().log("--- Before Transformation UUID---::" + randomUUID);
 
+			// Convert CDA to FHIR format
 			instance.transform(outputFile, randomUUID, context);
 
-			// convert CDA to FHIR format and write output into eICRMessageFHIRV2/.
+			// write output into eICRMessageFHIRV2/.
 			String responseEICRFHIR = getFileContentAsString(randomUUID, context); // EICR FHIR
 
 			if (StringUtils.isNullOrEmpty(responseEICRFHIR)) {
 				context.getLogger().log("Output not generated check logs ");
 			} else {
-				context.getLogger().log("Writing output file ");
 				key = key.replace("eCRMessageV2", "eICRMessageFHIRV2");
 				context.getLogger().log("key value before writing file :" + key);
+				
+				//
 				this.writeFhirFile(responseEICRFHIR, bucket, key, context);
 				context.getLogger().log("Output Generated  :" + bucket + "/" + key);
 
-				// Call Validation on RR FHIR
+				// Call Validation on EICR FHIR
 				key = key.replace("eICRMessageFHIRV2", "eICRValidationMessageFHIRV2");
 				context.getLogger().log("key value before validation :" + key);
+				// Call Validation on EICR FHIR
+				// write output to eICRValidationMessageFHIRV2
 				validate(responseEICRFHIR, bucket, key, context);
 			}
 
@@ -191,15 +195,20 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			IParser target = FhirContext.forR4().newXmlParser(); // new XML parser
 			Bundle eicrBundle = target.parseResource(Bundle.class, responseEICRFHIR);
 			Bundle rrBundle = target.parseResource(Bundle.class, responsRRFHIR);
+			
+			// create bundle form eicr and rr bundle
 			Bundle reportingBundle = (Bundle) getBundle(eicrBundle, rrBundle, context);
 
 			// write bundle
 			key = key.replace("eICRValidationMessageFHIRV2", "PHAeICRMessageV2");
-			context.getLogger().log("write bundle :" + key);
-			this.writeFhirFile(convertBundleToString(reportingBundle), bucket, key, context);
+			context.getLogger().log("write created bundle to :" + key);
+			
+			String rrEicrBundleStr = convertBundleToString(reportingBundle);
+			this.writeFhirFile(rrEicrBundleStr, bucket, key, context);
+			
 			context.getLogger().log("Output Generated  " + bucket + "/" + key);
 			key = key.replace("PHAeICRMessageV2", "PHAeICRValidationMessageV2");
-			validate(responseEICRFHIR, bucket, key, context);
+			validate(rrEicrBundleStr, bucket, key, context);
 
 			return "SUCCESS";
 		} catch (Exception e) {
@@ -530,7 +539,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 		// Create a FHIR context for R4
 		FhirContext fhirContext = FhirContext.forR4();
 		// Create a JSON parser
-		IParser parser = fhirContext.newJsonParser().setPrettyPrint(true);
+		IParser parser = fhirContext.newXmlParser().setPrettyPrint(true);
 		// Serialize the bundle to a JSON string
 		return parser.encodeResourceToString(bundle);
 	}

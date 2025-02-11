@@ -23,6 +23,7 @@ Import Project as Maven Project Build:
 Navigate to `ecr-pha-processor-lambda` directory  `..../` and run Maven build to build lambda jar file.
 
 ```
+$ mvn clean
 
 $ mvn clean install
 ```
@@ -58,13 +59,48 @@ Permissions: Create a new role with basic Lambda permissions or select your orga
 
 2. Under `Permissions` tab click on `Create inline Policy`
 
-3. Click on `{ } JSON` tab and ad the following security policy. Replace the `S3-BUCKET-NAME` with your S3 name.
+3. Click on `{ } JSON` tab and ad the following security policy. 
+
+   Replace the `SQS-NAME` with your SQS name.
+
+   Replace the `S3-BUCKET-NAME` with your S3 bucket name.
+
+   Replace the `S3-LIC_BUCKET-NAME` with your S3 bucket name for saxon license.
 
 ```
-	{
- {
+{
     "Version": "2012-10-17",
     "Statement": [
+        {
+            "Sid": "Statement1",
+            "Effect": "Allow",
+            "Action": "sqs:ReceiveMessage",
+            "Resource": "arn:aws:sqs:SQS-NAME"
+        },
+        {
+            "Sid": "Statement2",
+            "Effect": "Allow",
+            "Action": "sqs:DeleteMessage",
+            "Resource": "arn:aws:sqs:SQS-NAME"
+        },
+        {
+            "Sid": "Statement3",
+            "Effect": "Allow",
+            "Action": "sqs:GetQueueAttributes",
+            "Resource": "arn:aws:sqs:SQS-NAME"
+        },
+        {
+            "Sid": "ListObjectsInBucket",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObjectVersion",
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::S3-LIC_BUCKET-NAME/*"
+        },
         {
             "Sid": "ListObjectsInBucketS3",
             "Effect": "Allow",
@@ -253,7 +289,7 @@ Lambda function needs to be triggered, for this we need to add and configure the
 
 4. From the `SQS queque (from the SQS Queue Step 1)` drop down select your SQS that this lambda function will listen.
 
-6. Click Add.
+5. Click Add.
 
 
 ### At this point the Lambda function is created and configured to listen to the S3 Bucket.

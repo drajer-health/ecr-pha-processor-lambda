@@ -164,7 +164,7 @@ To process the file from the S3 bucket, lambda function needs to be configured t
 |VALIDATION_URL	  | <- URL for Validaiton ->  |
 |LICENSE_BUCKET_NAME   | <- s3 bucket name where license is stored ->  |
 
-eg VALIDATION_URL : http://<<Fhir-Router:Port>>/fhirvalidator/fhir/Bundle/$validate
+eg VALIDATION_URL : https://<<Fhir-Router:Port>>/fhirvalidator/fhir/Bundle/$validate
 
 ### SQS Queue
 Choose the SQS queue and click `Create Queue` 

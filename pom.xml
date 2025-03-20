@@ -4,14 +4,15 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.drajer.ecr.pha</groupId>
 	<artifactId>ecr-pha-processor-lambda</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 	<packaging>jar</packaging>
 	<properties>
 		<maven.test.skip>true</maven.test.skip>
 	    <maven.compiler.target>17</maven.compiler.target>
 	    <maven.compiler.source>17</maven.compiler.source>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
-	    <fhir.version>5.4.0</fhir.version>
+	    <fhir.version>8.0.0</fhir.version>
+	    <spring.core.version>6.2.3</spring.core.version>
 	</properties>
 	<build>
 		<plugins>
@@ -132,6 +133,12 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-s3</artifactId>
+			<exclusions>
+				<exclusion>
+		    		<groupId>software.amazon.ion</groupId>
+		    		<artifactId>ion-java</artifactId>
+		    	</exclusion>
+			</exclusions>				
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -180,7 +187,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<version>5.3.10</version>
+			<version>${spring.core.version}</version>
 		</dependency>
 
 		<!-- FHIR Dependencies -->

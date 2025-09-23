@@ -11,7 +11,7 @@
 	    <maven.compiler.target>17</maven.compiler.target>
 	    <maven.compiler.source>17</maven.compiler.source>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
-	    <fhir.version>8.0.0</fhir.version>
+	    <fhir.version>8.4.0</fhir.version>
 	    <spring.core.version>6.2.11</spring.core.version>
 	</properties>
 	<build>
@@ -109,7 +109,7 @@
 			<dependency>
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-bom</artifactId>
-				<version>1.12.111</version>
+				<version>1.12.261</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

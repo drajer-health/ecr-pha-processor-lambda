@@ -13,6 +13,7 @@
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
 	    <fhir.version>8.4.0</fhir.version>
 	    <spring.core.version>6.2.11</spring.core.version>
+	    <commons.lang3.version>3.18.0</commons.lang3.version>
 	</properties>
 	<build>
 		<plugins>
@@ -214,6 +215,10 @@
 			<artifactId>hapi-fhir-client</artifactId>
 			<version>${fhir.version}</version>
 		</dependency>
-						  
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>${commons.lang3.version}</version>
+		</dependency>						  
 	</dependencies>
 </project>

@@ -4,15 +4,18 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.drajer.ecr.pha</groupId>
 	<artifactId>ecr-pha-processor-lambda</artifactId>
-	<version>1.0.4</version>
+	<version>1.0.5</version>
 	<packaging>jar</packaging>
 	<properties>
 		<maven.test.skip>true</maven.test.skip>
 	    <maven.compiler.target>17</maven.compiler.target>
 	    <maven.compiler.source>17</maven.compiler.source>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
-	    <fhir.version>8.0.0</fhir.version>
-	    <spring.core.version>6.2.3</spring.core.version>
+	    <fhir.version>8.4.0</fhir.version>
+	    <spring.core.version>6.2.11</spring.core.version>
+	    <commons.lang3.version>3.18.0</commons.lang3.version>
+	    <commons.text.version>1.14.0</commons.text.version>
+	    <commons.compress.version>1.28.0</commons.compress.version>
 	</properties>
 	<build>
 		<plugins>
@@ -109,7 +112,7 @@
 			<dependency>
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-bom</artifactId>
-				<version>1.12.111</version>
+				<version>1.12.261</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -214,6 +217,20 @@
 			<artifactId>hapi-fhir-client</artifactId>
 			<version>${fhir.version}</version>
 		</dependency>
-						  
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>${commons.lang3.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-text</artifactId>
+		    <version>${commons.text.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-compress</artifactId>
+		    <version>${commons.compress.version}</version>
+		</dependency>		
 	</dependencies>
 </project>

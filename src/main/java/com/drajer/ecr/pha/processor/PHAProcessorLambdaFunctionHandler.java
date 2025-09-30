@@ -386,7 +386,6 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			// logger.log(inputStrBuilder.toString());
 
 			HttpResponse response = null;
-			String respStr = "";
 			try {
 				context.getLogger().log("Making the HTTP Post to " + httpPostUrl);
 				response = httpClient.execute(postRequest);
@@ -395,7 +394,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				context.getLogger().log(" In HTTP Post Exception " + e.getLocalizedMessage());
 				e.printStackTrace();
 				//create dummy response for failure
-				response = createDummyHttpResponse(200, e.getLocalizedMessage() +" for : "+theKeyPrefix);
+				response = createDummyHttpResponse(200,  oprOutComeStr(200,e.getLocalizedMessage(),theKeyPrefix));
 			}
 
 			// Check return status and throw Runtime exception for return code != 200
@@ -404,7 +403,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				context.getLogger().log("Post Message failed reason: " + response.getStatusLine().getReasonPhrase());
 				context.getLogger().log("Post Message response body: " + response.toString());
 				//create dummy response for failure
-				response = createDummyHttpResponse(200, oprOutComeStr(theKeyPrefix)); //"{\"message\": \"Success\"}"
+				response = createDummyHttpResponse(200, oprOutComeStr(response.getStatusLine().getStatusCode(),response.toString(),theKeyPrefix)); //"{\"message\": \"Success\"}"
 				//throw new RuntimeException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
 			}
 			StringBuilder outputStr = new StringBuilder();
@@ -574,8 +573,8 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
         return mockResponse;
     }	
     
-    public static String oprOutComeStr(String theKeyPrefix ) {
-    	String xmlStr = "<OperationOutcome xmlns=\"http://hl7.org/fhir\"><text><status value=\"extensions\"></status><div xmlns=\"http://www.w3.org/1999/xhtml\"><table class=\"grid\"><tr><td><b>Severity</b></td> <td> <b>Location</b> </td> <td> <b>Code</b></td><td><b>Details</b></td><td> <b>Diagnostics</b></td><td><b>Source</b></td></tr><tr><td>ERROR</td><td></td>400<td>"+"HTTP RESPONSE CODE RECEIVED 400 for "+theKeyPrefix+"</td><td></td><td>No display for Extension</td></tr></table></div></text></OperationOutcome>";   	
+    public static String oprOutComeStr(int code, String responseMessage, String theKeyPrefix ) {
+    	String xmlStr = "<OperationOutcome xmlns=\"http://hl7.org/fhir\"><text><status value=\"extensions\"></status><div xmlns=\"http://www.w3.org/1999/xhtml\"><table class=\"grid\"><tr><td><b>Severity</b></td> <td> <b>Location</b> </td> <td> <b>Code</b></td><td><b>Details</b></td><td> <b>Diagnostics</b></td><td><b>Source</b></td></tr><tr><td>ERROR</td><td></td>"+code+"<td>"+responseMessage+" for "+theKeyPrefix+"</td><td></td><td>No display for Extension</td></tr></table></div></text></OperationOutcome>";   	
     	return xmlStr;
     }
 }

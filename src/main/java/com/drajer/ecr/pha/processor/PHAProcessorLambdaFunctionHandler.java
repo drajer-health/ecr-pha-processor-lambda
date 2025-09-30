@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,7 +23,9 @@ import java.util.UUID;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
@@ -41,6 +44,9 @@ import org.hl7.fhir.r4.model.MessageHeader.MessageSourceComponent;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.mockito.Mockito;
 import org.springframework.util.ResourceUtils;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -397,7 +403,9 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				context.getLogger().log("Post Message failed with Code: " + response.getStatusLine().getStatusCode());
 				context.getLogger().log("Post Message failed reason: " + response.getStatusLine().getReasonPhrase());
 				context.getLogger().log("Post Message response body: " + response.toString());
-				throw new RuntimeException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
+				//create dummy response for failure
+				response = createDummyHttpResponse(200, oprOutComeStr(theKeyPrefix)); //"{\"message\": \"Success\"}"
+				//throw new RuntimeException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
 			}
 			StringBuilder outputStr = new StringBuilder();
 
@@ -543,4 +551,48 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 		// Serialize the bundle to a JSON string
 		return parser.encodeResourceToString(bundle);
 	}
+	
+    public static HttpResponse createDummyHttpResponse(int statusCode, String responseBody) {
+        HttpResponse mockResponse = Mockito.mock(HttpResponse.class);
+        StatusLine mockStatusLine = Mockito.mock(StatusLine.class);
+        HttpEntity mockEntity = Mockito.mock(HttpEntity.class);
+
+        try {
+            Mockito.when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+            Mockito.when(mockStatusLine.getStatusCode()).thenReturn(statusCode);
+
+            if (responseBody != null) {
+                InputStream inputStream = new ByteArrayInputStream(responseBody.getBytes());
+                Mockito.when(mockResponse.getEntity()).thenReturn(mockEntity);
+                Mockito.when(mockEntity.getContent()).thenReturn(inputStream);
+            }
+
+        } catch (Exception e) {
+            // Handle potential exceptions during mocking, though unlikely with simple mocks
+            e.printStackTrace();
+        }
+        return mockResponse;
+    }	
+    
+    public static String oprOutComeStr(String theKeyPrefix ) {
+    	JSONObject mainObject = new JSONObject();
+    	mainObject.put("resourceType", "OperationOutcome");
+    	mainObject.put("id", getUUID());
+    	
+    	JSONObject lastUpdated = new JSONObject();
+    	lastUpdated.put("lastUpdated", ZonedDateTime.now());
+    	
+    	mainObject.put("meta", lastUpdated);
+    	
+    	JSONObject issueObj = new JSONObject();
+    	issueObj.put("severity", "error");
+    	issueObj.put("code", "400");
+    	issueObj.put("diagnostics", "HTTP RESPONSE CODE RECEIVED 400 for "+theKeyPrefix);
+    	
+    	JSONArray issue = new JSONArray();
+    	issue.put(issueObj);
+    	mainObject.put("issue", issue);
+    	
+    	return mainObject.toString();
+    }
 }

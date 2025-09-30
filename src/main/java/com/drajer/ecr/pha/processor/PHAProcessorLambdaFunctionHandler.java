@@ -37,6 +37,7 @@ import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.CanonicalType;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MessageHeader;
 import org.hl7.fhir.r4.model.MessageHeader.MessageDestinationComponent;
 import org.hl7.fhir.r4.model.MessageHeader.MessageSourceComponent;
@@ -196,8 +197,28 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			//
 			String responsRRFHIR = getS3ObjectAsString(bucket, rrFHIRKey, context); // RR FHIR
 			IParser target = FhirContext.forR4().newXmlParser(); // new XML parser
-			Bundle eicrBundle = target.parseResource(Bundle.class, responseEICRFHIR);
-			Bundle rrBundle = target.parseResource(Bundle.class, responsRRFHIR);
+			Bundle eicrBundle = null;
+			Bundle rrBundle = null;
+			try {
+				eicrBundle = target.parseResource(Bundle.class, responseEICRFHIR);
+				rrBundle = target.parseResource(Bundle.class, responsRRFHIR);				
+			}catch (Exception e) {
+				context.getLogger().log(e.getMessage());
+				context.getLogger().log("Exception in creating EICR/RR bundle ");
+				e.printStackTrace();
+			}
+
+			// if parser error create dummy bundle
+			if (eicrBundle == null) {
+				eicrBundle = new Bundle();
+				eicrBundle.setId(IdType.newRandomUuid());
+			}
+			
+			// if parser error create dummy bundle
+			if (rrBundle == null) {
+				rrBundle = new Bundle();
+				rrBundle.setId(IdType.newRandomUuid());
+			}
 			
 			// create bundle form eicr and rr bundle
 			Bundle reportingBundle = (Bundle) getBundle(eicrBundle, rrBundle, context);

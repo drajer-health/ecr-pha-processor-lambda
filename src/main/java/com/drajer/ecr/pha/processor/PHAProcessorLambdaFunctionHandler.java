@@ -22,7 +22,9 @@ import java.util.UUID;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
@@ -35,12 +37,14 @@ import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.CanonicalType;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MessageHeader;
 import org.hl7.fhir.r4.model.MessageHeader.MessageDestinationComponent;
 import org.hl7.fhir.r4.model.MessageHeader.MessageSourceComponent;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
+import org.mockito.Mockito;
 import org.springframework.util.ResourceUtils;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -193,8 +197,28 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			//
 			String responsRRFHIR = getS3ObjectAsString(bucket, rrFHIRKey, context); // RR FHIR
 			IParser target = FhirContext.forR4().newXmlParser(); // new XML parser
-			Bundle eicrBundle = target.parseResource(Bundle.class, responseEICRFHIR);
-			Bundle rrBundle = target.parseResource(Bundle.class, responsRRFHIR);
+			Bundle eicrBundle = null;
+			Bundle rrBundle = null;
+			try {
+				eicrBundle = target.parseResource(Bundle.class, responseEICRFHIR);
+				rrBundle = target.parseResource(Bundle.class, responsRRFHIR);				
+			}catch (Exception e) {
+				context.getLogger().log(e.getMessage());
+				context.getLogger().log("Exception in creating EICR/RR bundle ");
+				e.printStackTrace();
+			}
+
+			// if parser error create dummy bundle
+			if (eicrBundle == null) {
+				eicrBundle = new Bundle();
+				eicrBundle.setId(IdType.newRandomUuid());
+			}
+			
+			// if parser error create dummy bundle
+			if (rrBundle == null) {
+				rrBundle = new Bundle();
+				rrBundle.setId(IdType.newRandomUuid());
+			}
 			
 			// create bundle form eicr and rr bundle
 			Bundle reportingBundle = (Bundle) getBundle(eicrBundle, rrBundle, context);
@@ -390,6 +414,8 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			} catch (Exception e) {
 				context.getLogger().log(" In HTTP Post Exception " + e.getLocalizedMessage());
 				e.printStackTrace();
+				//create dummy response for failure
+				response = createDummyHttpResponse(200,  oprOutComeStr(200,e.getLocalizedMessage(),theKeyPrefix));
 			}
 
 			// Check return status and throw Runtime exception for return code != 200
@@ -397,7 +423,9 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 				context.getLogger().log("Post Message failed with Code: " + response.getStatusLine().getStatusCode());
 				context.getLogger().log("Post Message failed reason: " + response.getStatusLine().getReasonPhrase());
 				context.getLogger().log("Post Message response body: " + response.toString());
-				throw new RuntimeException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
+				//create dummy response for failure
+				response = createDummyHttpResponse(200, oprOutComeStr(response.getStatusLine().getStatusCode(),response.toString(),theKeyPrefix)); //"{\"message\": \"Success\"}"
+				//throw new RuntimeException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
 			}
 			StringBuilder outputStr = new StringBuilder();
 
@@ -543,4 +571,31 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 		// Serialize the bundle to a JSON string
 		return parser.encodeResourceToString(bundle);
 	}
+	
+    public static HttpResponse createDummyHttpResponse(int statusCode, String responseBody) {
+        HttpResponse mockResponse = Mockito.mock(HttpResponse.class);
+        StatusLine mockStatusLine = Mockito.mock(StatusLine.class);
+        HttpEntity mockEntity = Mockito.mock(HttpEntity.class);
+
+        try {
+            Mockito.when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
+            Mockito.when(mockStatusLine.getStatusCode()).thenReturn(statusCode);
+
+            if (responseBody != null) {
+                InputStream inputStream = new ByteArrayInputStream(responseBody.getBytes());
+                Mockito.when(mockResponse.getEntity()).thenReturn(mockEntity);
+                Mockito.when(mockEntity.getContent()).thenReturn(inputStream);
+            }
+
+        } catch (Exception e) {
+            // Handle potential exceptions during mocking, though unlikely with simple mocks
+            e.printStackTrace();
+        }
+        return mockResponse;
+    }	
+    
+    public static String oprOutComeStr(int code, String responseMessage, String theKeyPrefix ) {
+    	String xmlStr = "<OperationOutcome xmlns=\"http://hl7.org/fhir\"><text><status value=\"extensions\"></status><div xmlns=\"http://www.w3.org/1999/xhtml\"><table class=\"grid\"><tr><td><b>Severity</b></td> <td> <b>Location</b> </td> <td> <b>Code</b></td><td><b>Details</b></td><td> <b>Diagnostics</b></td><td><b>Source</b></td></tr><tr><td>ERROR</td><td></td>"+code+"<td>"+responseMessage+" for "+theKeyPrefix+"</td><td></td><td>No display for Extension</td></tr></table></div></text></OperationOutcome>";   	
+    	return xmlStr;
+    }
 }

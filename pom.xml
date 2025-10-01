@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.drajer.ecr.pha</groupId>
 	<artifactId>ecr-pha-processor-lambda</artifactId>
-	<version>1.0.5</version>
+	<version>1.0.6</version>
 	<packaging>jar</packaging>
 	<properties>
 		<maven.test.skip>true</maven.test.skip>
@@ -16,6 +16,7 @@
 	    <commons.lang3.version>3.18.0</commons.lang3.version>
 	    <commons.text.version>1.14.0</commons.text.version>
 	    <commons.compress.version>1.28.0</commons.compress.version>
+	    <json.version>20250517</json.version>
 	</properties>
 	<build>
 		<plugins>
@@ -121,16 +122,14 @@
 
 	<dependencies>		
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<scope>test</scope>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter-engine</artifactId>
+		    <version>5.13.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>2.7.22</version>
-			<scope>test</scope>
+			<version>5.20.0</version>
 		</dependency>
 
 		<dependency>

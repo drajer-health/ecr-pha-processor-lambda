@@ -488,7 +488,14 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 
 			// Setup Message Header to Bundle Linkage.
 			Reference ref = new Reference();
-			ref.setReference(BUNDLE_REL_URL + bundle.getId());
+
+			String refBundleId = bundle.getId();
+			if (refBundleId != null && refBundleId.toLowerCase(Locale.ROOT).startsWith("bundle/")) {
+				ref.setReference(bundle.getId());
+			} else {
+				ref.setReference(BUNDLE_REL_URL + bundle.getId());
+			}			
+
 			List<Reference> refs = new ArrayList<Reference>();
 			refs.add(ref);
 			header.setFocus(refs);

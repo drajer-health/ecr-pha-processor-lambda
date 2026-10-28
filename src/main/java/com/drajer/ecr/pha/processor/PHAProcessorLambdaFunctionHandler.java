@@ -490,7 +490,7 @@ public class PHAProcessorLambdaFunctionHandler implements RequestHandler<Map<Str
 			Reference ref = new Reference();
 
 			String refBundleId = bundle.getId();
-			if (refBundleId != null && refBundleId.toLowerCase(Locale.ROOT).startsWith("bundle/")) {
+			if (refBundleId != null && refBundleId.toLowerCase().startsWith("bundle/")) {
 				ref.setReference(bundle.getId());
 			} else {
 				ref.setReference(BUNDLE_REL_URL + bundle.getId());
